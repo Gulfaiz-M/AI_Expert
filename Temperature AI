@@ -1,0 +1,113 @@
+import os
+import time
+from google import genai
+from google.genai import types
+import config
+
+# To run this code, install the required dependency:
+# pip install google-genai
+
+def generate_response(prompt, temperature=0.5):
+    """Generate a response from Gemini API with a specified temperature."""
+    
+    try:
+        # Initialize the client with API key from config module
+        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        
+        # Create the content structure
+        contents = [
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_text(text=prompt),
+                ],
+            ),
+        ]
+        
+        # Configure generation parameters
+        generate_content_config = types.GenerateContentConfig(
+            temperature=temperature,
+        )
+        
+        # Generate the response
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents=contents,
+            config=generate_content_config,
+        )
+        
+        return response.text
+        
+    except Exception as e:
+        return f"Error generating response: {str(e)}"
+
+
+def temperature_prompt_activity():
+    """Interactive activity to explore temperature settings and instruction-based prompts."""
+    
+    print("=" * 80)
+    print("ADVANCED PROMPT ENGINEERING: TEMPERATURE & INSTRUCTION-BASED PROMPTS")
+    print("=" * 80)
+    
+    print("\nIn this activity, we'll explore:")
+    print("1. How temperature affects AI creativity and randomness")
+    print("2. How instruction-based prompts can control AI outputs")
+    
+    # Part 1: Temperature Exploration
+    print("\n" + "-" * 40)
+    print("PART 1: TEMPERATURE EXPLORATION")
+    print("-" * 40)
+    
+    base_prompt = input("\nEnter a creative prompt (e.g., 'Write a short story about a robot learning to paint'): ")
+    
+    print("\nGenerating responses with different temperature settings...")
+    
+    print("\n--- LOW TEMPERATURE (0.1) - More Deterministic ---")
+    low_temp_response = generate_response(base_prompt, temperature=0.1)
+    print(low_temp_response)
+    
+    # Add a small delay between API calls to avoid rate limiting
+    time.sleep(1)
+    
+    print("\n--- MEDIUM TEMPERATURE (0.5) - Balanced ---")
+    medium_temp_response = generate_response(base_prompt, temperature=0.5)
+    print(medium_temp_response)
+    
+    # Add a small delay between API calls to avoid rate limiting
+    time.sleep(1)
+    
+    print("\n--- HIGH TEMPERATURE (1.0) - More Creative ---")
+    high_temp_response = generate_response(base_prompt, temperature=1.0)
+    print(high_temp_response)
+    
+    # Part 2: Instruction-based Prompts
+    print("\n" + "-" * 40)
+    print("PART 2: INSTRUCTION-BASED PROMPTS")
+    print("-" * 40)
+    
+    print("\nNow let's see how specific instructions can guide the AI's output.")
+    
+    topic = input("\nEnter a topic (e.g., 'climate change', 'artificial intelligence'): ")
+    
+    # Different instruction styles
+    prompts = {
+        "Explain": f"Explain {topic} in simple terms suitable for a 10-year-old.",
+        "List": f"List 5 key facts about {topic}.",
+        "Compare": f"Compare and contrast two different perspectives on {topic}.",
+        "Analyze": f"Provide a detailed analysis of the impact of {topic} on society."
+    }
+    
+    for instruction_type, prompt in prompts.items():
+        print(f"\n--- {instruction_type.upper()} Style ---")
+        print(f"Prompt: {prompt}")
+        response = generate_response(prompt, temperature=0.5)
+        print(f"\nResponse:\n{response}")
+        time.sleep(1)  # Rate limiting
+    
+    print("\n" + "=" * 80)
+    print("Activity Complete!")
+    print("=" * 80)
+
+
+if __name__ == "__main__":
+    temperature_prompt_activity()
