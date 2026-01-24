@@ -1,0 +1,54 @@
+import google.generativeai as genai
+import config
+
+# Configure API key
+genai.configure(api_key=config.GEMINI_API_KEY)
+
+def generate_response(prompt, temperature=0.3):
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(
+            prompt,
+            generation_config={"temperature": temperature}
+        )
+        return response.text
+    except Exception as e:
+        return f"Error: {e}"
+
+def bias_mitigation_activity():
+    print("\n=== BIAS MITIGATION ACTIVITY ===\n")
+
+    prompt = input("Enter a prompt to explore bias: ")
+    print("\nInitial AI Response:")
+    print(generate_response(prompt))
+
+    modified_prompt = input("\nModify the prompt to be more neutral: ")
+    print("\nNeutral AI Response:")
+    print(generate_response(modified_prompt))
+
+def token_limit_activity():
+    print("\n=== TOKEN LIMIT ACTIVITY ===\n")
+
+    long_prompt = input("Enter a long prompt: ")
+    long_response = generate_response(long_prompt)
+    print("\nResponse (trimmed):")
+    print(long_response[:500], "...")
+
+    short_prompt = input("\nCondense the prompt: ")
+    print("\nResponse to condensed prompt:")
+    print(generate_response(short_prompt))
+
+def run_activity():
+    print("\n=== AI Learning Activity ===")
+    choice = input("Choose activity (1: Bias, 2: Token Limits): ")
+
+    if choice == "1":
+        bias_mitigation_activity()
+    elif choice == "2":
+        token_limit_activity()
+    else:
+        print("Invalid choice")
+
+if __name__ == "__main__":
+    run_activity()
+1
