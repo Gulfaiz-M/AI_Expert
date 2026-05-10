@@ -1,0 +1,127 @@
+
+from ursina import *
+from ursina.prefabs.first_person_controller import FirstPersonController
+import random
+
+app = Ursina()
+
+window.title = '3D Car Racing Game'
+window.borderless = False
+window.fullscreen = False
+window.exit_button.visible = True
+window.fps_counter.enabled = True
+
+# Sky and lighting
+Sky()
+DirectionalLight().look_at(Vec3(1, -1, -1))
+AmbientLight(color=color.rgba(100, 100, 100, 0.5))
+
+# Road
+road = Entity(
+    model='cube',
+    scale=(10, 0.1, 200),
+    position=(0, 0, 90),
+    color=color.gray
+)
+
+# Lane markers
+for z in range(0, 200, 10):
+    Entity(
+        model='cube',
+        scale=(0.2, 0.02, 4),
+        position=(0, 0.06, z),
+        color=color.white
+    )
+
+# Grass on sides
+Entity(model='cube', scale=(50, 0.05, 200), position=(-30, -0.05, 90), color=color.green)
+Entity(model='cube', scale=(50, 0.05, 200), position=(30, -0.05, 90), color=color.green)
+
+# Player car
+player = Entity(
+    model='cube',
+    color=color.red,
+    scale=(1.5, 0.7, 3),
+    position=(0, 0.5, 0),
+    collider='box'
+)
+
+speed = 25
+score = 0
+is_game_over = False
+
+# Camera
+camera.parent = player
+camera.position = (0, 6, -12)
+camera.rotation_x = 20
+
+# UI
+score_text = Text(text='Score: 0', position=(-0.85, 0.45), scale=2)
+game_over_text = Text(
+    text='',
+    origin=(0, 0),
+    scale=3,
+    color=color.yellow,
+    background=True
+)
+
+# Obstacles
+obstacles = []
+for i in range(10):
+    obstacle = Entity(
+        model='cube',
+        color=random.choice([color.azure, color.orange, color.violet, color.yellow]),
+        scale=(1.5, 0.7, 3),
+        position=(random.choice([-3, 0, 3]), 0.5, random.randint(20, 180)),
+        collider='box'
+    )
+    obstacles.append(obstacle)
+
+
+def update():
+    global score, is_game_over
+
+    if is_game_over:
+        return
+
+    # Forward movement
+    player.z += speed * time.dt
+
+    # Left/right movement
+    lane_speed = 8 * time.dt
+    if held_keys['a'] or held_keys['left arrow']:
+        player.x -= lane_speed
+    if held_keys['d'] or held_keys['right arrow']:
+        player.x += lane_speed
+
+    # Keep player within road bounds
+    player.x = clamp(player.x, -4, 4)
+
+    # Move obstacles and check collision
+    for obstacle in obstacles:
+        if obstacle.z < player.z - 10:
+            obstacle.z += 200
+            obstacle.x = random.choice([-3, 0, 3])
+            score += 1
+            score_text.text = f'Score: {score}'
+
+        if player.intersects(obstacle).hit:
+            game_over()
+
+
+
+def game_over():
+    global is_game_over
+    is_game_over = True
+    game_over_text.text = 'GAME OVER\nPress R to Restart'
+
+
+
+def input(key):
+    if key == 'r' and is_game_over:
+        application.restart()
+
+
+app.run()
+
+
